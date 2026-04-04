@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -43,10 +44,15 @@ const Register = () => {
   };
 
   const handleGoogleSignup = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/client-area` },
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
     });
+    if (result.error) {
+      toast({ title: "Google signup failed", description: String(result.error), variant: "destructive" });
+      return;
+    }
+    if (result.redirected) return;
+    navigate("/client-area");
   };
 
   const inputClass = "w-full border border-border rounded-md px-4 py-3 text-sm bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none";
