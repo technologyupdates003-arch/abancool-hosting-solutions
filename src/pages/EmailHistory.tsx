@@ -67,13 +67,13 @@ const EmailHistory = () => {
       
       setLoadingEmails(true);
       try {
-        // Try to get real email history first, fallback to mock data
+        // Get email history
         let emailHistory;
         try {
-          emailHistory = await emailService.getUserEmailHistory(user.id, emailTypeFilter);
+          emailHistory = await emailService.getEmailHistory(user.id);
         } catch (error) {
-          console.log('Using mock data for email history');
-          emailHistory = await emailService.getMockEmailHistory(user.id);
+          console.log('Failed to load email history');
+          emailHistory = [];
         }
         
         // Sort emails
@@ -210,7 +210,7 @@ const EmailHistory = () => {
                     >
                       <span>{getEmailTypeIcon(type)}</span>
                       <span className="capitalize">{type}</span>
-                      <span className="ml-auto">({count})</span>
+                      <span className="ml-auto">({count as number})</span>
                     </button>
                   ))}
                 </div>

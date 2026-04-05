@@ -12,6 +12,8 @@ export interface ResellerApplication {
   status?: 'pending' | 'approved' | 'rejected';
 }
 
+const db = supabase as any;
+
 export const resellerService = {
   async submitApplication(application: ResellerApplication) {
     const { data: { user } } = await supabase.auth.getUser();
@@ -20,7 +22,7 @@ export const resellerService = {
       throw new Error('User must be logged in to submit reseller application');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('reseller_applications')
       .insert([{
         user_id: user.id,
@@ -44,7 +46,7 @@ export const resellerService = {
   },
 
   async getUserApplication(userId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('reseller_applications')
       .select('*')
       .eq('user_id', userId)

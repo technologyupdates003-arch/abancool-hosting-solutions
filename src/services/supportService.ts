@@ -38,9 +38,11 @@ export interface SystemStatus {
   last_updated: string;
 }
 
+const db = supabase as any;
+
 export const supportService = {
   async getSupportCategories() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('support_categories')
       .select('*')
       .eq('is_active', true)
@@ -51,11 +53,11 @@ export const supportService = {
       throw error;
     }
 
-    return data as SupportCategory[];
+    return (data || []) as SupportCategory[];
   },
 
   async submitAbuseReport(report: AbuseReport) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('abuse_reports')
       .insert([{
         reporter_email: report.reporter_email,
@@ -78,7 +80,7 @@ export const supportService = {
   },
 
   async submitContactMessage(message: ContactMessage) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('contact_messages')
       .insert([{
         name: message.name,
@@ -100,7 +102,7 @@ export const supportService = {
   },
 
   async getSystemStatus() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('system_status')
       .select('*')
       .order('service_name');
@@ -110,11 +112,11 @@ export const supportService = {
       throw error;
     }
 
-    return data as SystemStatus[];
+    return (data || []) as SystemStatus[];
   },
 
   async subscribeToNewsletter(email: string, name?: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('newsletter_subscriptions')
       .insert([{
         email,
@@ -125,9 +127,8 @@ export const supportService = {
       .single();
 
     if (error) {
-      // If email already exists, update the subscription
       if (error.code === '23505') {
-        const { data: updateData, error: updateError } = await supabase
+        const { data: updateData, error: updateError } = await db
           .from('newsletter_subscriptions')
           .update({
             is_active: true,

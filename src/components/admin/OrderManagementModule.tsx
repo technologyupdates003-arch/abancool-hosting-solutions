@@ -36,33 +36,24 @@ export function OrderManagementModule() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select(`
-          id,
-          order_number,
-          status,
-          payment_status,
-          total,
-          currency,
-          payment_method,
-          created_at,
-          items,
-          profiles!orders_user_id_fkey (
-            email,
-            first_name,
-            last_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedOrders = data?.map(order => ({
-        ...order,
-        user_email: order.profiles?.email || 'Unknown',
-        user_name: order.profiles?.first_name && order.profiles?.last_name 
-          ? `${order.profiles.first_name} ${order.profiles.last_name}`
-          : order.profiles?.email?.split('@')[0] || 'Unknown'
-      })) || [];
+      const formattedOrders = (data || []).map(order => ({
+        id: order.id,
+        order_number: order.order_number || '',
+        status: order.status || 'pending',
+        payment_status: order.payment_status || 'pending',
+        total: order.total,
+        currency: order.currency || 'KSh',
+        payment_method: order.payment_method,
+        created_at: order.created_at || '',
+        user_email: 'N/A',
+        user_name: 'Customer',
+        items: Array.isArray(order.items) ? order.items as any[] : []
+      }));
 
       setOrders(formattedOrders);
     } catch (error) {
@@ -128,7 +119,7 @@ export function OrderManagementModule() {
     try {
       const { error } = await supabase
         .from('orders')
-        .update({ status: newStatus })
+        .update({ status: newStatus as any })
         .eq('id', orderId);
 
       if (error) throw error;

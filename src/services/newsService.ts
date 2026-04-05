@@ -15,6 +15,8 @@ export interface NewsArticle {
   updated_at: string;
 }
 
+const db = supabase as any;
+
 export const newsService = {
   async getArticles(options?: {
     category?: string;
@@ -22,7 +24,7 @@ export const newsService = {
     limit?: number;
     offset?: number;
   }) {
-    let query = supabase
+    let query = db
       .from('news_articles')
       .select('*')
       .eq('published', true)
@@ -51,11 +53,11 @@ export const newsService = {
       throw error;
     }
 
-    return data as NewsArticle[];
+    return (data || []) as NewsArticle[];
   },
 
   async getArticleBySlug(slug: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('news_articles')
       .select('*')
       .eq('slug', slug)
@@ -71,7 +73,7 @@ export const newsService = {
   },
 
   async getCategories() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('news_articles')
       .select('category')
       .eq('published', true);
@@ -81,12 +83,12 @@ export const newsService = {
       throw error;
     }
 
-    const categories = [...new Set(data.map(article => article.category))];
+    const categories = [...new Set((data || []).map((article: any) => article.category))];
     return categories;
   },
 
   async searchArticles(searchTerm: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('news_articles')
       .select('*')
       .eq('published', true)
@@ -98,6 +100,6 @@ export const newsService = {
       throw error;
     }
 
-    return data as NewsArticle[];
+    return (data || []) as NewsArticle[];
   }
 };

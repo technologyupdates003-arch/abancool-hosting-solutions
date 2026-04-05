@@ -36,7 +36,7 @@ const News = () => {
       ]);
       
       setArticles(allArticles);
-      setCategories(['all', ...articleCategories]);
+      setCategories(['all', ...(articleCategories as string[])]);
       setFeaturedArticles(featured);
     } catch (error) {
       console.error('Error loading news data:', error);

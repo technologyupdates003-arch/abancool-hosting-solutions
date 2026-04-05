@@ -25,14 +25,14 @@ class DomainService {
   // Get available TLDs and their pricing from database
   async getTLDs(): Promise<DomainTLD[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('domain_tlds')
         .select('*')
         .eq('is_active', true)
         .order('tld');
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as DomainTLD[];
     } catch (error) {
       console.error('Error fetching TLDs:', error);
       // Fallback to static data if database fails
