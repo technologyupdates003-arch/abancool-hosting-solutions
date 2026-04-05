@@ -52,7 +52,7 @@ export const orderService = {
       .from('orders')
       .insert([{
         user_id: user.id,
-        items: orderData.items,
+        items: orderData.items as any,
         domain_option: orderData.domainOption,
         payment_method: orderData.paymentMethod,
         subtotal,
