@@ -173,15 +173,15 @@ export const automationService = {
         return;
       }
 
-      // Get user details
-      const { data: userData, error: userError } = await supabase
-        .from('auth.users')
+      // Get user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
         .select('*')
         .eq('id', order.user_id)
         .single();
 
-      if (userError || !userData) {
-        console.error('User not found for DirectAdmin account creation:', order.user_id);
+      if (profileError || !profileData) {
+        console.error('User profile not found for DirectAdmin account creation:', order.user_id);
         return;
       }
 
@@ -193,10 +193,10 @@ export const automationService = {
           domainOption: order.domain_option
         },
         {
-          email: userData.email,
-          firstName: userData.user_metadata?.first_name || '',
-          lastName: userData.user_metadata?.last_name || '',
-          userId: userData.id
+          email: profileData.email,
+          firstName: profileData.first_name || '',
+          lastName: profileData.last_name || '',
+          userId: profileData.id
         }
       );
     } catch (error) {

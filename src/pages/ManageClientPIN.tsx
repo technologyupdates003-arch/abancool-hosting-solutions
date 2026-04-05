@@ -14,16 +14,16 @@ const ManageClientPIN = () => {
   const [loading, setLoading] = useState(true);
   const [accountExpanded, setAccountExpanded] = useState(true);
   const [supportPIN, setSupportPIN] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const navigate = useNavigate();
+  const { profile } = useProfile(user);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (profile?.support_pin) {
       setSupportPIN(profile.support_pin);
     }
   }, [profile]);
-  const [refreshing, setRefreshing] = useState(false);
-  const navigate = useNavigate();
-  const { profile } = useProfile(user);
-  const { toast } = useToast();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

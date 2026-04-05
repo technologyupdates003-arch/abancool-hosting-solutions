@@ -246,7 +246,11 @@ export const directAdminService = {
       // Queue invoice email
       const { error } = await supabase
         .from('email_queue')
-        .insert([invoiceData]);
+        .insert([{
+          ...invoiceData,
+          subject: `Invoice #${orderData.orderNumber} - Abancool Technology`,
+          html_content: `<h1>Invoice</h1><p>Order #${orderData.orderNumber}</p>`
+        }]);
 
       if (error) {
         console.error('Error queueing invoice email:', error);

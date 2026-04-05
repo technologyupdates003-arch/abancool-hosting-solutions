@@ -70,7 +70,7 @@ export function BillingCycleSelector({ plan, onClose }: BillingCycleSelectorProp
       price: price,
       currency: plan.currency,
       billingCycle: selectedCycle,
-      features: Array.isArray(plan.features) ? plan.features : [],
+      features: Array.isArray(plan.features) ? (plan.features as string[]) : [],
       category: plan.category,
       setupFee: 0,
       renewalPrice: plan.price * selectedOption.multiplier

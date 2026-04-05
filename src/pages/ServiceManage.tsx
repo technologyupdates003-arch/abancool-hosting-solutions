@@ -87,7 +87,7 @@ const ServiceManage = () => {
         .single();
 
       if (serviceError) throw serviceError;
-      setService(serviceData);
+      setService(serviceData as any);
 
       // Fetch DirectAdmin account
       const { data: accountData, error: accountError } = await supabase
