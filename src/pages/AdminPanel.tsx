@@ -78,8 +78,19 @@ const AdminPanel = () => {
       return;
     }
     
-    // Check if user is admin (you can implement your admin check logic here)
-    // For now, we'll allow any authenticated user
+    // Check admin role from user_roles table
+    const { data: roleData } = await (supabase as any)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', session.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (!roleData) {
+      navigate("/client-area");
+      return;
+    }
+
     setUser(session.user);
     setLoading(false);
   };

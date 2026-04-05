@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, User, HelpCircle, Menu, X } from "lucide-react";
+import { ChevronDown, User, HelpCircle, Menu, X, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CartIcon } from "@/components/Cart";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 const navItems = [
   { label: "Home", href: "/" },
