@@ -189,7 +189,11 @@ export const directAdminService = {
       // Queue email for immediate sending
       const { error } = await supabase
         .from('email_queue')
-        .insert([emailData]);
+        .insert([{
+          ...emailData,
+          subject: 'Welcome to Abancool Technology - Your Hosting Account is Ready!',
+          html_content: `<h1>Welcome!</h1><p>Your hosting account has been created.</p>`
+        }]);
 
       if (error) {
         console.error('Error queueing welcome email:', error);
