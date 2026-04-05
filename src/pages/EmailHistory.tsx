@@ -210,7 +210,7 @@ const EmailHistory = () => {
                     >
                       <span>{getEmailTypeIcon(type)}</span>
                       <span className="capitalize">{type}</span>
-                      <span className="ml-auto">({count})</span>
+                      <span className="ml-auto">({count as number})</span>
                     </button>
                   ))}
                 </div>
