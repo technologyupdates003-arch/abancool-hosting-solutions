@@ -347,7 +347,7 @@ export const orderService = {
       total: data?.length || 0,
       completed: data?.filter(o => o.status === 'completed').length || 0,
       pending: data?.filter(o => o.status === 'pending').length || 0,
-      revenue: data?.filter(o => o.status === 'completed').reduce((sum, o) => sum + parseFloat(o.total), 0) || 0
+      revenue: data?.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.total, 0) || 0
     };
 
     return stats;
