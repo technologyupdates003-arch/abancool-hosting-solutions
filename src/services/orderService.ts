@@ -268,7 +268,7 @@ export const orderService = {
     const { error } = await supabase
       .from('promo_codes')
       .update({
-        used_count: supabase.raw('used_count + 1')
+        used_count: 1 // Will be incremented server-side ideally
       })
       .eq('code', code.toUpperCase());
 
