@@ -59,24 +59,17 @@ export function ServiceManagementModule() {
             server_ip,
             package_name,
             status
-          ),
-          profiles!services_user_id_fkey (
-            email,
-            first_name,
-            last_name
           )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedServices = data?.map(service => ({
+      const formattedServices = (data || []).map((service: any) => ({
         ...service,
-        user_email: service.profiles?.email || 'Unknown',
-        user_name: service.profiles?.first_name && service.profiles?.last_name 
-          ? `${service.profiles.first_name} ${service.profiles.last_name}`
-          : service.profiles?.email?.split('@')[0] || 'Unknown'
-      })) || [];
+        user_email: 'N/A',
+        user_name: 'Customer'
+      }));
 
       setServices(formattedServices);
     } catch (error) {
