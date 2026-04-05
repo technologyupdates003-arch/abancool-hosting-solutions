@@ -51,6 +51,12 @@ const Navbar = () => {
               <HelpCircle className="w-4 h-4" />
               Help Center
             </Link>
+            {isAdmin && (
+              <Link to="/admin" className="flex items-center gap-1 text-sm text-nav-foreground/70 hover:text-nav-foreground transition-colors">
+                <Shield className="w-4 h-4" />
+                Admin
+              </Link>
+            )}
             {user ? (
               <Link to="/client-area" className="flex items-center gap-1.5 px-4 py-2 text-sm rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
                 <User className="w-4 h-4" />
