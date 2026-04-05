@@ -222,7 +222,7 @@ const NetworkStatus = () => {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Response Time</span>
-                    <span className="text-sm font-medium">< 200ms</span>
+                    <span className="text-sm font-medium">&lt; 200ms</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Active Incidents</span>
