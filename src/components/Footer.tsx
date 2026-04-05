@@ -1,8 +1,35 @@
+import { Link } from "react-router-dom";
+
 const footerLinks = {
-  Products: ["Web Hosting", "WordPress Hosting", "VPS Hosting", "Dedicated Servers", "Domain Registration", "Email Hosting", "SSL Certificates"],
-  Company: ["About Us", "Blog", "Careers", "Contact", "Partners"],
-  Support: ["Help Center", "Knowledge Base", "Open a Ticket", "Network Status", "How to Pay"],
-  Legal: ["Terms of Service", "Privacy Policy", "Acceptable Use Policy", "SLA"],
+  Products: [
+    { name: "Web Hosting", href: "/store?category=Web Hosting" },
+    { name: "WordPress Hosting", href: "/store?category=WordPress Hosting" },
+    { name: "VPS Hosting", href: "/store?category=Cloud Servers Linux" },
+    { name: "Reseller Hosting", href: "/reseller" },
+    { name: "Domain Registration", href: "/store?category=Domains" },
+    { name: "Email Hosting", href: "/store?category=Professional Email" },
+    { name: "SSL Certificates", href: "/store?category=SSL Certificates" }
+  ],
+  Company: [
+    { name: "About Us", href: "/news" },
+    { name: "News & Updates", href: "/news" },
+    { name: "PHP Support", href: "/php-support" },
+    { name: "Contact", href: "/support" },
+    { name: "Partners", href: "/affiliates" }
+  ],
+  Support: [
+    { name: "Help Center", href: "/support" },
+    { name: "Open a Ticket", href: "/open-ticket" },
+    { name: "Network Status", href: "/network-status" },
+    { name: "Resolution Center", href: "/resolution-center" },
+    { name: "Billing Support", href: "/billing-support" }
+  ],
+  Legal: [
+    { name: "Terms of Service", href: "#" },
+    { name: "Privacy Policy", href: "#" },
+    { name: "Acceptable Use Policy", href: "#" },
+    { name: "SLA", href: "#" }
+  ],
 };
 
 const Footer = () => {
@@ -31,10 +58,10 @@ const Footer = () => {
               <h4 className="font-semibold text-footer-foreground/90 mb-4 text-sm">{title}</h4>
               <ul className="space-y-2">
                 {links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-sm text-footer-foreground/50 hover:text-primary transition-colors">
-                      {link}
-                    </a>
+                  <li key={link.name}>
+                    <Link to={link.href} className="text-sm text-footer-foreground/50 hover:text-primary transition-colors">
+                      {link.name}
+                    </Link>
                   </li>
                 ))}
               </ul>

@@ -1,46 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useHostingPlans } from "@/hooks/useHostingPlans";
 import datacenter from "@/assets/datacenter.jpg";
 
-const categories = ["Servers", "Hosting", "Domains", "Resellers", "Websites", "Security"];
-
-type Plan = { title: string; price: string; unit: string; desc: string; cta: string };
-
-const plansData: Record<string, Plan[]> = {
-  Servers: [
-    { title: "Dedicated Servers", price: "$149", unit: "/month", desc: "High-performance servers with root, IPMI and RMM access.", cta: "See server plans" },
-    { title: "Linux Cloud Servers", price: "$9.99", unit: "/month", desc: "Robust KVM virtual machines with dedicated RAM, CPU, SSD and IO.", cta: "See cloud plans" },
-    { title: "Windows Cloud Servers", price: "$39.99", unit: "/month", desc: "Scalable Windows servers for ASP.NET apps. Includes one RDP license.", cta: "See windows plans" },
-  ],
-  Hosting: [
-    { title: "Web Hosting", price: "$3.99", unit: "/month", desc: "Get your business online with shared web hosting.", cta: "See hosting plans" },
-    { title: "LiteSpeed Hosting", price: "$5.49", unit: "/month", desc: "Accelerated hosting with LS Cache and QUIC CDN.", cta: "See litespeed plans" },
-    { title: "WordPress Hosting", price: "$5.49", unit: "/month", desc: "Speedy WP hosting with AI Site Builder and WordPress Manager.", cta: "See wordpress plans" },
-  ],
-  Domains: [
-    { title: "Domain Registration", price: "$4.99", unit: "/year", desc: "Secure your domain today. Over 400 TLDs to choose from.", cta: "Register domains" },
-    { title: "Domain Transfer", price: "$7.99", unit: "/year", desc: "Transfer your existing domain to us seamlessly.", cta: "Transfer now" },
-    { title: "WHOIS Lookup", price: "Free", unit: "", desc: "Lookup any domain currently registered in the world.", cta: "Lookup domains" },
-  ],
-  Resellers: [
-    { title: "VPS Reseller", price: "$19.99", unit: "setup", desc: "Start your own VPS and cloud hosting business today.", cta: "Find out more" },
-    { title: "Hosting Reseller", price: "$11.49", unit: "/month", desc: "Become a hosting reseller and start earning a profit.", cta: "See reseller plans" },
-    { title: "Domain Reseller", price: "$19.99", unit: "setup", desc: "Discounted domain prices and WHMCS integration.", cta: "See domain prices" },
-  ],
-  Websites: [
-    { title: "AI Site Builder", price: "Free", unit: "", desc: "AI-powered website builder. Ideal for starting out.", cta: "Start building" },
-    { title: "Online Store", price: "$9.99", unit: "/month", desc: "Launch your online store quickly with our e-commerce solutions.", cta: "See store plans" },
-    { title: "Blog Builder", price: "Free", unit: "", desc: "Create a stunning blog effortlessly with our intuitive tools.", cta: "Start blogging" },
-  ],
-  Security: [
-    { title: "SSL Certificates", price: "Free", unit: "", desc: "Secure your site with EV, DV and OV certificates.", cta: "See SSL prices" },
-    { title: "DDoS Protection", price: "$4.99", unit: "/month", desc: "Enterprise-grade protection against DDoS attacks.", cta: "Learn more" },
-    { title: "Backup Solutions", price: "$2.99", unit: "/month", desc: "Automated daily backups with one-click restore.", cta: "See backup plans" },
-  ],
-};
+const categories = ["Web Hosting", "Reseller Hosting", "Shared Hosting", "WordPress Hosting", "LiteSpeed Hosting", "Professional Email"];
 
 const HostingPlans = () => {
-  const [active, setActive] = useState("Servers");
+  const [active, setActive] = useState("Web Hosting");
+  const { plans, loading } = useHostingPlans(active);
 
   return (
     <section id="hosting-plans" className="py-16 md:py-24 bg-muted/50">
@@ -92,25 +59,38 @@ const HostingPlans = () => {
             </div>
 
             {/* Plan cards */}
-            {plansData[active]?.map((plan) => (
-              <div
-                key={plan.title}
-                className="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all group"
-              >
-                <h3 className="text-lg font-bold text-foreground mb-1">{plan.title}</h3>
-                <div className="flex items-baseline gap-1 mb-3">
-                  <span className="text-2xl font-extrabold text-primary">{plan.price}</span>
-                  {plan.unit && <span className="text-sm text-muted-foreground">{plan.unit}</span>}
-                </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{plan.desc}</p>
-                <a
-                  href="#"
-                  className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                >
-                  {plan.cta} →
-                </a>
+            {loading ? (
+              <div className="col-span-2 flex justify-center items-center py-12">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
               </div>
-            ))}
+            ) : plans.length === 0 ? (
+              <div className="col-span-2 text-center py-12 text-muted-foreground">
+                <p className="text-lg">Plans coming soon for {active}</p>
+                <p className="text-sm mt-2">Contact us for custom pricing.</p>
+              </div>
+            ) : (
+              plans.slice(0, 2).map((plan) => (
+                <div
+                  key={plan.id}
+                  className="bg-card rounded-2xl p-6 border border-border shadow-sm hover:shadow-lg hover:border-primary/30 transition-all group"
+                >
+                  <h3 className="text-lg font-bold text-foreground mb-1">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1 mb-3">
+                    <span className="text-2xl font-extrabold text-primary">{plan.currency} {plan.price.toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {active === "Reseller Hosting" ? "/month" : active === "Shared Hosting" ? "/year" : "/month"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{plan.description}</p>
+                  <a
+                    href="/store"
+                    className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                  >
+                    See {active.toLowerCase()} plans →
+                  </a>
+                </div>
+              ))
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

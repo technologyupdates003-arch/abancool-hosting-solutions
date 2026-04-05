@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, User, ShoppingCart, HelpCircle, Menu, X } from "lucide-react";
+import { ChevronDown, User, HelpCircle, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CartIcon } from "@/components/Cart";
 
 const navItems = [
   { label: "Home", href: "/" },
-  { label: "Hosting", href: "/store", dropdown: true },
-  { label: "Servers", href: "/store", dropdown: true },
-  { label: "Email", href: "/store", dropdown: true },
-  { label: "Domains", href: "/store", dropdown: true },
-  { label: "Add-Ons", href: "/store" },
-  { label: "Reseller", href: "/store", dropdown: true },
+  { label: "Hosting", href: "/store?category=Web Hosting", dropdown: true },
+  { label: "Servers", href: "/store?category=Cloud Servers Linux", dropdown: true },
+  { label: "Email", href: "/store?category=Professional Email", dropdown: true },
+  { label: "Domains", href: "/store?category=Domains", dropdown: true },
+  { label: "Resellers", href: "/reseller", dropdown: true },
+  { label: "Add-Ons", href: "/store?category=SSL Certificates" },
+  { label: "Resources", href: "/news", dropdown: true },
+  { label: "Billing & Support", href: "/support", dropdown: true },
 ];
 
 const Navbar = () => {
@@ -42,7 +45,7 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="#" className="flex items-center gap-1 text-sm text-nav-foreground/70 hover:text-nav-foreground transition-colors">
+            <Link to="/support" className="flex items-center gap-1 text-sm text-nav-foreground/70 hover:text-nav-foreground transition-colors">
               <HelpCircle className="w-4 h-4" />
               Help Center
             </Link>
@@ -57,9 +60,7 @@ const Navbar = () => {
                 Login
               </Link>
             )}
-            <Link to="/store" className="text-nav-foreground/70 hover:text-nav-foreground transition-colors">
-              <ShoppingCart className="w-5 h-5" />
-            </Link>
+            <CartIcon />
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-nav-foreground">
@@ -98,7 +99,7 @@ const Navbar = () => {
             </Link>
           ))}
           <div className="pt-3 border-t border-nav-foreground/10 flex flex-col gap-2">
-            <Link to="#" className="flex items-center gap-2 px-4 py-2 text-sm text-nav-foreground/70">
+            <Link to="/support" className="flex items-center gap-2 px-4 py-2 text-sm text-nav-foreground/70">
               <HelpCircle className="w-4 h-4" /> Help Center
             </Link>
             {user ? (

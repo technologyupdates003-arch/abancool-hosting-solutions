@@ -26,20 +26,53 @@ const Register = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { first_name: form.firstName, last_name: form.lastName, phone: form.phone },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
-    } else {
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: { 
+            first_name: form.firstName, 
+            last_name: form.lastName, 
+            phone: form.phone 
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // Create profile record
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: form.email,
+            first_name: form.firstName,
+            last_name: form.lastName,
+            phone: form.phone,
+            company: form.company,
+            address: form.address,
+            city: form.city,
+            state: form.state,
+            postcode: form.postcode,
+            country: form.country,
+            credit_balance: 0,
+          });
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        }
+      }
+
       toast({ title: "Account created!", description: "Please check your email to verify your account." });
       navigate("/login");
+    } catch (error: any) {
+      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 

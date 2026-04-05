@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:setup": "node scripts/setup-database.js",
+    "db:clean": "echo 'Run cleanup_duplicates.sql in Supabase SQL Editor to clean duplicates'",
+    "db:migrate": "supabase migration up",
+    "db:reset": "supabase db reset --linked"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -81,13 +85,13 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
-    "jsdom": "^20.0.3",
+    "jsdom": "^29.0.1",
     "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19",
+    "vite": "^8.0.3",
     "vitest": "^3.2.4"
   }
 }

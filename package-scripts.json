@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "insert-packages": "node scripts/insert-hosting-packages.js",
+    "seed-db": "supabase db reset --linked",
+    "setup-packages": "npm run seed-db && npm run insert-packages"
+  }
+}
