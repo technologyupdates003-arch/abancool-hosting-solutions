@@ -22,7 +22,7 @@ interface ServiceData {
   hosting_plans: {
     name: string;
     monthly_price: number;
-    features: string[];
+    features: any;
   };
 }
 
