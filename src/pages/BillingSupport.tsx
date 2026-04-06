@@ -19,9 +19,7 @@ interface Invoice {
   currency: string;
   status: string;
   due_date: string;
-  service_id?: string;
-  invoice_type: string;
-  items: any[];
+  order_id?: string;
 }
 
 interface BillingDashboard {
@@ -69,18 +67,33 @@ const BillingSupport = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('billing_dashboard')
+      // Calculate billing dashboard from services and invoices
+      const { data: userServices } = await supabase
+        .from('services')
+        .select('*')
+        .eq('user_id', user.id);
+
+      const { data: unpaidInvoices } = await supabase
+        .from('invoices')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .eq('status', 'unpaid');
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching billing data:', error);
-        return;
-      }
+      const activeCount = userServices?.filter(s => s.status === 'active').length || 0;
+      const unpaidCount = unpaidInvoices?.length || 0;
+      const outstanding = unpaidInvoices?.reduce((sum, inv) => sum + inv.amount, 0) || 0;
+      const overdue = unpaidInvoices?.filter(inv => new Date(inv.due_date) < new Date()).length || 0;
+      const nextDue = userServices
+        ?.filter(s => s.status === 'active')
+        .sort((a, b) => new Date(a.next_due_date).getTime() - new Date(b.next_due_date).getTime())[0]?.next_due_date;
 
-      setBillingData(data);
+      setBillingData({
+        active_services: activeCount,
+        unpaid_invoices: unpaidCount,
+        outstanding_balance: outstanding,
+        next_due_date: nextDue || '',
+        overdue_invoices: overdue,
+      });
     } catch (error) {
       console.error('Error fetching billing data:', error);
     }
@@ -102,7 +115,7 @@ const BillingSupport = () => {
         return;
       }
 
-      setInvoices(data || []);
+      setInvoices((data || []) as Invoice[]);
     } catch (error) {
       console.error('Error fetching invoices:', error);
     }
@@ -305,7 +318,7 @@ const BillingSupport = () => {
                         <div>
                           <h3 className="font-semibold text-foreground">#{invoice.invoice_number}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {invoice.invoice_type === 'recurring' ? 'Recurring Service' : 'One-time Payment'}
+                            Service Invoice
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Due: {new Date(invoice.due_date).toLocaleDateString()}
