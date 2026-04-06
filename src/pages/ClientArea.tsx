@@ -131,14 +131,14 @@ const ClientArea = () => {
         {/* Account Management */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { icon: UserIcon, title: "Account Details", desc: "Edit your account details" },
+            { icon: UserIcon, title: "Account Details", desc: "Edit your account details", link: "/account-details" },
             { icon: Users, title: "User Management", desc: "Sub accounts and permission management", link: "/user-management" },
             { icon: Building, title: "Contacts", desc: "Account contact information management", link: "/contacts" },
             { icon: Shield, title: "Account Security", desc: "Manage Single Sign-On permission", link: "/account-security" },
             { icon: Mail, title: "Email History", desc: "Your email history with us", link: "/email-history" },
-            { icon: Settings, title: "Your Profile", desc: "General account profile management" },
-            { icon: Lock, title: "Change Password", desc: "Change your current account password" },
-            { icon: Shield, title: "Security Settings", desc: "Secure your account & manage linked accounts" },
+            { icon: Settings, title: "Your Profile", desc: "General account profile management", link: "/your-profile" },
+            { icon: Lock, title: "Change Password", desc: "Change your current account password", link: "/change-password" },
+            { icon: Shield, title: "Security Settings", desc: "Secure your account & manage linked accounts", link: "/security-settings" },
             { icon: Settings, title: "Manage Your Client PIN", desc: "Manage your support PIN", link: "/manage-client-pin" },
             { icon: LogOut, title: "Logout", desc: "Safely log out of the system", action: handleLogout },
           ].map((link) => {

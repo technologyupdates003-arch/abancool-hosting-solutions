@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useCart } from "@/contexts/CartContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -10,8 +11,67 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addItem } = useCart();
+
+  const redirectTo = searchParams.get('redirect');
+  const planName = searchParams.get('plan');
+
+  useEffect(() => {
+    // Show a message if user is logging in for a specific plan
+    if (planName) {
+      toast({
+        title: "Login Required",
+        description: `Please login to continue ordering ${planName}.`,
+      });
+    }
+  }, [planName, toast]);
+
+  const handlePostLoginFlow = async () => {
+    // Check for pending order in localStorage
+    const pendingOrderData = localStorage.getItem('pendingOrder');
+    if (pendingOrderData) {
+      try {
+        const pendingOrder = JSON.parse(pendingOrderData);
+        
+        // Check if the order is still valid (not too old)
+        const orderAge = Date.now() - pendingOrder.timestamp;
+        const maxAge = 30 * 60 * 1000; // 30 minutes
+        
+        if (orderAge < maxAge && pendingOrder.cartItem) {
+          // Add the item to cart
+          addItem(pendingOrder.cartItem);
+          
+          toast({
+            title: "Order Restored",
+            description: `${pendingOrder.cartItem.name} has been added to your cart.`,
+          });
+          
+          // Clear the pending order
+          localStorage.removeItem('pendingOrder');
+          
+          // Redirect to checkout
+          navigate('/checkout');
+          return;
+        } else {
+          // Order too old, clear it
+          localStorage.removeItem('pendingOrder');
+        }
+      } catch (error) {
+        console.error('Error processing pending order:', error);
+        localStorage.removeItem('pendingOrder');
+      }
+    }
+    
+    // Default redirect behavior
+    if (redirectTo === 'checkout') {
+      navigate('/checkout');
+    } else {
+      navigate('/client-area');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +81,7 @@ const Login = () => {
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
-      navigate("/client-area");
+      await handlePostLoginFlow();
     }
   };
 
@@ -34,7 +94,7 @@ const Login = () => {
       return;
     }
     if (result.redirected) return;
-    navigate("/client-area");
+    await handlePostLoginFlow();
   };
 
   return (

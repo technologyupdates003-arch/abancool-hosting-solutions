@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useHostingPlans } from "@/hooks/useHostingPlans";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import datacenter from "@/assets/datacenter.jpg";
 
 const categories = ["Web Hosting", "Reseller Hosting", "Shared Hosting", "WordPress Hosting", "LiteSpeed Hosting", "Professional Email"];
@@ -8,6 +11,56 @@ const categories = ["Web Hosting", "Reseller Hosting", "Shared Hosting", "WordPr
 const HostingPlans = () => {
   const [active, setActive] = useState("Web Hosting");
   const { plans, loading } = useHostingPlans(active);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleOrderNow = async (plan: any) => {
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Store plan info for after registration/login
+        const pendingOrder = {
+          cartItem: {
+            type: 'hosting',
+            planId: plan.id,
+            name: plan.name,
+            price: plan.price * 12, // Default to annual
+            currency: plan.currency,
+            billingCycle: 'annually',
+            features: Array.isArray(plan.features) ? plan.features : [],
+            category: plan.category,
+            setupFee: 0,
+            renewalPrice: plan.price * 12,
+            domainOption: 'existing'
+          },
+          timestamp: Date.now(),
+          redirectTo: '/checkout'
+        };
+        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+        
+        toast({
+          title: "Registration Required",
+          description: "Please create an account or login to continue with your order.",
+        });
+        
+        navigate('/register?redirect=checkout&plan=' + encodeURIComponent(plan.name));
+        return;
+      }
+
+      // User is authenticated, go to store page with plan selected
+      navigate(`/store?category=${encodeURIComponent(active)}&plan=${plan.id}`);
+      
+    } catch (error) {
+      console.error('Error handling order:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <section id="hosting-plans" className="py-16 md:py-24 bg-muted/50">
@@ -82,12 +135,21 @@ const HostingPlans = () => {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{plan.description}</p>
-                  <a
-                    href="/store"
-                    className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                  >
-                    See {active.toLowerCase()} plans →
-                  </a>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOrderNow(plan)}
+                      className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition-opacity flex-1"
+                    >
+                      Order Now
+                    </button>
+                    <button
+                      onClick={() => navigate(`/store?category=${encodeURIComponent(active)}`)}
+                      className="text-primary border border-primary px-4 py-2 rounded text-sm font-medium hover:bg-primary/10 transition-colors"
+                    >
+                      View All
+                    </button>
+                  </div>
                 </div>
               ))
             )}

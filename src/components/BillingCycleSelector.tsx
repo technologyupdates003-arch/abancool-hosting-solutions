@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,8 +7,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
-import { X, ShoppingCart } from "lucide-react";
+import { X, ShoppingCart, User } from "lucide-react";
 
 interface BillingCycleSelectorProps {
   plan: Tables<'hosting_plans'>;
@@ -15,9 +17,12 @@ interface BillingCycleSelectorProps {
 }
 
 export function BillingCycleSelector({ plan, onClose }: BillingCycleSelectorProps) {
-  const [selectedCycle, setSelectedCycle] = useState<'monthly' | 'quarterly' | 'annually' | 'biennial'>('monthly');
+  const [selectedCycle, setSelectedCycle] = useState<'monthly' | 'quarterly' | 'annually' | 'biennial'>('annually');
+  const [selectedDomain, setSelectedDomain] = useState<'existing' | 'new' | 'subdomain'>('existing');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const billingOptions = [
     {
@@ -59,29 +64,118 @@ export function BillingCycleSelector({ plan, onClose }: BillingCycleSelectorProp
     return basePrice * (1 - discount / 100);
   };
 
-  const handleAddToCart = () => {
-    const selectedOption = billingOptions.find(opt => opt.cycle === selectedCycle)!;
-    const price = calculatePrice(selectedOption.multiplier, selectedOption.discount);
+  const handleProceedToCheckout = async () => {
+    setIsProcessing(true);
+    
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const selectedOption = billingOptions.find(opt => opt.cycle === selectedCycle)!;
+      const price = calculatePrice(selectedOption.multiplier, selectedOption.discount);
 
-    addItem({
-      type: 'hosting',
-      planId: plan.id,
-      name: plan.name,
-      price: price,
-      currency: plan.currency,
-      billingCycle: selectedCycle,
-      features: Array.isArray(plan.features) ? plan.features : [],
-      category: plan.category,
-      setupFee: 0,
-      renewalPrice: plan.price * selectedOption.multiplier
-    });
+      // Create cart item data
+      const cartItem = {
+        type: 'hosting' as const,
+        planId: plan.id,
+        name: plan.name,
+        price: price,
+        currency: plan.currency,
+        billingCycle: selectedCycle,
+        features: Array.isArray(plan.features) ? plan.features : [],
+        category: plan.category,
+        setupFee: 0,
+        renewalPrice: plan.price * selectedOption.multiplier,
+        domainOption: selectedDomain
+      };
 
-    toast({
-      title: "Added to Cart",
-      description: `${plan.name} (${selectedOption.label}) has been added to your cart.`,
-    });
+      if (!session) {
+        // Store cart item in localStorage for after registration/login
+        const pendingOrder = {
+          cartItem,
+          timestamp: Date.now(),
+          redirectTo: '/checkout'
+        };
+        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+        
+        toast({
+          title: "Registration Required",
+          description: "Please create an account or login to continue with your order.",
+        });
+        
+        onClose();
+        navigate('/register?redirect=checkout&plan=' + encodeURIComponent(plan.name));
+        return;
+      }
 
-    onClose();
+      // User is authenticated, add to cart and proceed to checkout
+      addItem(cartItem);
+
+      toast({
+        title: "Added to Cart",
+        description: `${plan.name} (${selectedOption.label}) has been added to your cart.`,
+      });
+
+      onClose();
+      navigate('/checkout');
+      
+    } catch (error) {
+      console.error('Error processing order:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAddToCartOnly = async () => {
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Login Required",
+          description: "Please login to add items to your cart.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const selectedOption = billingOptions.find(opt => opt.cycle === selectedCycle)!;
+      const price = calculatePrice(selectedOption.multiplier, selectedOption.discount);
+
+      addItem({
+        type: 'hosting',
+        planId: plan.id,
+        name: plan.name,
+        price: price,
+        currency: plan.currency,
+        billingCycle: selectedCycle,
+        features: Array.isArray(plan.features) ? plan.features : [],
+        category: plan.category,
+        setupFee: 0,
+        renewalPrice: plan.price * selectedOption.multiplier,
+        domainOption: selectedDomain
+      });
+
+      toast({
+        title: "Added to Cart",
+        description: `${plan.name} (${selectedOption.label}) has been added to your cart.`,
+      });
+
+      onClose();
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -159,24 +253,42 @@ export function BillingCycleSelector({ plan, onClose }: BillingCycleSelectorProp
           <div className="border-t pt-6">
             <h4 className="font-semibold mb-4">Domain Options</h4>
             <div className="space-y-3">
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                <input type="radio" name="domain" value="existing" defaultChecked />
+              <Label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 ${selectedDomain === 'existing' ? 'border-primary bg-primary/5' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="domain" 
+                  value="existing" 
+                  checked={selectedDomain === 'existing'}
+                  onChange={(e) => setSelectedDomain(e.target.value as any)}
+                />
                 <div>
                   <div className="font-medium">I have an existing domain</div>
                   <div className="text-sm text-muted-foreground">Use your current domain with this hosting plan</div>
                 </div>
               </Label>
               
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                <input type="radio" name="domain" value="new" />
+              <Label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 ${selectedDomain === 'new' ? 'border-primary bg-primary/5' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="domain" 
+                  value="new"
+                  checked={selectedDomain === 'new'}
+                  onChange={(e) => setSelectedDomain(e.target.value as any)}
+                />
                 <div>
                   <div className="font-medium">Register a new domain</div>
                   <div className="text-sm text-muted-foreground">Search and register a new domain (additional cost)</div>
                 </div>
               </Label>
               
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-                <input type="radio" name="domain" value="subdomain" />
+              <Label className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 ${selectedDomain === 'subdomain' ? 'border-primary bg-primary/5' : ''}`}>
+                <input 
+                  type="radio" 
+                  name="domain" 
+                  value="subdomain"
+                  checked={selectedDomain === 'subdomain'}
+                  onChange={(e) => setSelectedDomain(e.target.value as any)}
+                />
                 <div>
                   <div className="font-medium">Use a free subdomain</div>
                   <div className="text-sm text-muted-foreground">Get a free yoursite.abancool.com subdomain</div>
@@ -189,9 +301,26 @@ export function BillingCycleSelector({ plan, onClose }: BillingCycleSelectorProp
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
             </Button>
-            <Button onClick={handleAddToCart} className="flex-1">
+            <Button 
+              variant="outline" 
+              onClick={handleAddToCartOnly} 
+              className="flex-1"
+              disabled={isProcessing}
+            >
               <ShoppingCart className="w-4 h-4 mr-2" />
               Add to Cart
+            </Button>
+            <Button 
+              onClick={handleProceedToCheckout} 
+              className="flex-1"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              ) : (
+                <User className="w-4 h-4 mr-2" />
+              )}
+              {isProcessing ? 'Processing...' : 'Order Now'}
             </Button>
           </div>
         </CardContent>

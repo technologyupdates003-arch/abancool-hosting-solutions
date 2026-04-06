@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useCart } from "@/contexts/CartContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -13,11 +14,70 @@ const Register = () => {
     password: "", confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { addItem } = useCart();
+
+  const redirectTo = searchParams.get('redirect');
+  const planName = searchParams.get('plan');
+
+  useEffect(() => {
+    // Show a message if user is registering for a specific plan
+    if (planName) {
+      toast({
+        title: "Complete Registration",
+        description: `Create your account to continue ordering ${planName}.`,
+      });
+    }
+  }, [planName, toast]);
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((p) => ({ ...p, [field]: e.target.value }));
+
+  const handlePostRegistrationFlow = async () => {
+    // Check for pending order in localStorage
+    const pendingOrderData = localStorage.getItem('pendingOrder');
+    if (pendingOrderData) {
+      try {
+        const pendingOrder = JSON.parse(pendingOrderData);
+        
+        // Check if the order is still valid (not too old)
+        const orderAge = Date.now() - pendingOrder.timestamp;
+        const maxAge = 30 * 60 * 1000; // 30 minutes
+        
+        if (orderAge < maxAge && pendingOrder.cartItem) {
+          // Add the item to cart
+          addItem(pendingOrder.cartItem);
+          
+          toast({
+            title: "Order Restored",
+            description: `${pendingOrder.cartItem.name} has been added to your cart.`,
+          });
+          
+          // Clear the pending order
+          localStorage.removeItem('pendingOrder');
+          
+          // Redirect to checkout
+          navigate('/checkout');
+          return;
+        } else {
+          // Order too old, clear it
+          localStorage.removeItem('pendingOrder');
+        }
+      } catch (error) {
+        console.error('Error processing pending order:', error);
+        localStorage.removeItem('pendingOrder');
+      }
+    }
+    
+    // Default redirect behavior
+    if (redirectTo === 'checkout') {
+      navigate('/checkout');
+    } else {
+      navigate('/client-area');
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +127,14 @@ const Register = () => {
         }
       }
 
-      toast({ title: "Account created!", description: "Please check your email to verify your account." });
-      navigate("/login");
+      toast({ 
+        title: "Account created!", 
+        description: "Registration successful! You can now proceed with your order." 
+      });
+      
+      // Handle post-registration flow
+      await handlePostRegistrationFlow();
+      
     } catch (error: any) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     } finally {
@@ -85,7 +151,9 @@ const Register = () => {
       return;
     }
     if (result.redirected) return;
-    navigate("/client-area");
+    
+    // Handle post-registration flow for Google signup too
+    await handlePostRegistrationFlow();
   };
 
   const inputClass = "w-full border border-border rounded-md px-4 py-3 text-sm bg-background focus:ring-2 focus:ring-primary focus:border-primary outline-none";

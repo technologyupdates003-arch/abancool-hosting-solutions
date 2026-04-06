@@ -40,6 +40,10 @@ import News from "./pages/News.tsx";
 import Support from "./pages/Support.tsx";
 import PHPSupport from "./pages/PHPSupport.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AccountDetails from "./pages/AccountDetails.tsx";
+import ChangePassword from "./pages/ChangePassword.tsx";
+import SecuritySettings from "./pages/SecuritySettings.tsx";
+import YourProfile from "./pages/YourProfile.tsx";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +96,10 @@ const App = () => {
               <Route path="/news" element={<News />} />
               <Route path="/support" element={<Support />} />
               <Route path="/php-support" element={<PHPSupport />} />
+              <Route path="/account-details" element={<AccountDetails />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/security-settings" element={<SecuritySettings />} />
+              <Route path="/your-profile" element={<YourProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
