@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Globe, Search, CreditCard, Smartphone, Bitcoin, DollarSign, Tag, X } from "lucide-react";
+import { Globe, Search, CreditCard, Smartphone, Tag, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -537,29 +537,40 @@ const Checkout = () => {
                 <CardHeader>
                   <CardTitle>Payment Method</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="mpesa" id="mpesa" />
-                      <Smartphone className="w-4 h-4" />
-                      <Label htmlFor="mpesa">Mpesa</Label>
+                      <Smartphone className="w-5 h-5 text-green-600" />
+                      <Label htmlFor="mpesa" className="cursor-pointer flex-1">
+                        <div className="font-medium">M-Pesa</div>
+                        <div className="text-xs text-muted-foreground">Pay via M-Pesa STK Push</div>
+                      </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="paypal" id="paypal" />
-                      <DollarSign className="w-4 h-4" />
-                      <Label htmlFor="paypal">PayPal</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="card" id="card" />
-                      <CreditCard className="w-4 h-4" />
-                      <Label htmlFor="card">Credit Card</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="crypto" id="crypto" />
-                      <Bitcoin className="w-4 h-4" />
-                      <Label htmlFor="crypto">Bitcoin/Crypto</Label>
+                      <CreditCard className="w-5 h-5 text-blue-600" />
+                      <Label htmlFor="card" className="cursor-pointer flex-1">
+                        <div className="font-medium">Credit/Debit Card</div>
+                        <div className="text-xs text-muted-foreground">Visa, Mastercard via IntaSend</div>
+                      </Label>
                     </div>
                   </RadioGroup>
+
+                  {paymentMethod === 'mpesa' && (
+                    <div className="pt-2">
+                      <Label htmlFor="mpesa-phone">M-Pesa Phone Number</Label>
+                      <Input
+                        id="mpesa-phone"
+                        placeholder="0712345678 or 254712345678"
+                        value={mpesaPhone}
+                        onChange={(e) => setMpesaPhone(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You'll receive an STK push on this number
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
