@@ -13,6 +13,7 @@ export interface CartItem {
   setupFee?: number;
   renewalPrice?: number;
   category?: string;
+  domainOption?: 'existing' | 'new' | 'subdomain';
 }
 
 interface CartState {

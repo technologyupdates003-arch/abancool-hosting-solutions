@@ -66,14 +66,15 @@ const YourProfile = () => {
 
   useEffect(() => {
     if (profile && user) {
+      const prefs = profile.email_preferences as any || {};
       setProfileData({
         displayName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || user.email?.split('@')[0] || '',
-        bio: profile.bio || "",
-        website: profile.website || "",
-        timezone: profile.timezone || "Africa/Nairobi",
-        language: profile.language || "en",
-        theme: profile.theme || "system",
-        avatar: profile.avatar_url || ""
+        bio: prefs.bio || "",
+        website: prefs.website || "",
+        timezone: prefs.timezone || "Africa/Nairobi",
+        language: prefs.language || "en",
+        theme: prefs.theme || "system",
+        avatar: prefs.avatar_url || ""
       });
     }
   }, [profile, user]);
@@ -107,14 +108,17 @@ const YourProfile = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          bio: profileData.bio,
-          website: profileData.website,
-          timezone: profileData.timezone,
-          language: profileData.language,
-          theme: profileData.theme,
-          avatar_url: profileData.avatar,
-          preferences: preferences,
-          communication_settings: communicationSettings,
+          email_preferences: {
+            ...(profile?.email_preferences as any || {}),
+            bio: profileData.bio,
+            website: profileData.website,
+            timezone: profileData.timezone,
+            language: profileData.language,
+            theme: profileData.theme,
+            avatar_url: profileData.avatar,
+            notifications: preferences,
+            communication: communicationSettings,
+          },
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
