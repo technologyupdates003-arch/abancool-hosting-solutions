@@ -687,9 +687,9 @@ const Checkout = () => {
                     className="w-full" 
                     size="lg"
                     onClick={handlePayNowClick}
-                    disabled={loading}
+                    disabled={loading || paymentPolling}
                   >
-                    {loading ? "Processing..." : "Pay Now"}
+                    {paymentPolling ? "Waiting for payment confirmation..." : loading ? "Processing..." : "Pay Now"}
                   </Button>
 
                   <p className="text-xs text-muted-foreground">
