@@ -1264,6 +1264,10 @@ export type Database = {
         Returns: boolean
       }
       process_email_queue: { Args: never; Returns: undefined }
+      setup_admin_profile: {
+        Args: { user_email: string; user_id: string }
+        Returns: undefined
+      }
       trigger_automation_rules: {
         Args: { event_data?: Json; event_name: string }
         Returns: undefined
