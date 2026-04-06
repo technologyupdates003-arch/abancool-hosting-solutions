@@ -266,11 +266,11 @@ const PHPSupport = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <span className="font-medium">Setup Time</span>
-                    <span className="text-primary font-semibold">< 24 hours</span>
+                    <span className="text-primary font-semibold">&lt; 24 hours</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <span className="font-medium">Support Response</span>
-                    <span className="text-primary font-semibold">< 2 hours</span>
+                    <span className="text-primary font-semibold">&lt; 2 hours</span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <span className="font-medium">Uptime Guarantee</span>

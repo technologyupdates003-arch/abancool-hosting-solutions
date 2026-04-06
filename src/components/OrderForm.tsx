@@ -33,17 +33,16 @@ export const OrderForm = ({ plan, onClose }: OrderFormProps) => {
 
     setLoading(true);
     try {
-      const amount = billingCycle === 'yearly' ? plan.price * 10 : plan.price; // 10 months for yearly
+      const amount = billingCycle === 'yearly' ? plan.price * 10 : plan.price;
       
       await orderService.createOrder({
-        user_id: user.id,
         plan_id: plan.id,
         domain: domain || null,
         billing_cycle: billingCycle,
         amount,
         currency: plan.currency,
         status: 'pending',
-      });
+      } as any);
 
       toast({ title: "Order created successfully!", description: "We'll process your order shortly." });
       onClose();

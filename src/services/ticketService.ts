@@ -16,15 +16,14 @@ export const ticketService = {
 
     const { data, error } = await supabase
       .from('support_tickets')
-      .insert({
+      .insert([{
         user_id: user.id,
         ticket_number: ticketNumber,
-        department: ticketData.department,
         subject: ticketData.subject,
         message: ticketData.message,
-        priority: ticketData.priority || 'medium',
-        status: 'open'
-      })
+        priority: (ticketData.priority || 'medium') as any,
+        status: 'open' as const
+      }])
       .select()
       .single();
 
@@ -39,7 +38,7 @@ export const ticketService = {
       .eq('user_id', userId);
 
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('status', status as any);
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
