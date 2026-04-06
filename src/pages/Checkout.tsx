@@ -37,9 +37,11 @@ const Checkout = () => {
   const [domainSearch, setDomainSearch] = useState("");
   const [availableDomains, setAvailableDomains] = useState<any[]>([]);
   const [paymentMethod, setPaymentMethod] = useState("mpesa");
+  const [mpesaPhone, setMpesaPhone] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [promoError, setPromoError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentPolling, setPaymentPolling] = useState(false);
   const [user, setUser] = useState<any>(null);
   
   // New modal states
@@ -196,87 +198,166 @@ const Checkout = () => {
   const handleCompleteOrder = async (guestFormData?: GuestFormData) => {
     setLoading(true);
     try {
-      // Create order
-      const order = await orderService.createOrder({
-        items: state.items,
-        domainOption,
-        paymentMethod,
-        promoCode: state.promoCode,
-        discount: state.discount
-      });
+      // Ensure user is authenticated
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        toast({ title: "Please login first", variant: "destructive" });
+        navigate('/login');
+        return;
+      }
 
-      // Process payment (simulated)
-      const paymentSuccess = await orderService.processPayment(order.id, {
-        method: paymentMethod,
-        amount: calculateTotal(),
-        currency: state.currency
-      });
+      // Get profile for phone number
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('id', currentUser.id)
+        .single();
 
-      if (paymentSuccess) {
-        // Update promo code usage if applicable
-        if (state.promoCode) {
-          await orderService.updatePromoCodeUsage(state.promoCode);
+      // Create order in database
+      const orderData = {
+        user_id: currentUser.id,
+        items: state.items.map(item => ({
+          type: item.type,
+          planId: item.planId,
+          name: item.name,
+          price: item.price,
+          billingCycle: item.billingCycle,
+          domain: domainOption.domain || item.domain,
+          category: item.category,
+        })),
+        domain_option: domainOption,
+        payment_method: paymentMethod,
+        promo_code: state.promoCode || null,
+        discount_percentage: state.discount || null,
+        discount_amount: state.discount ? (calculateTotal() / (1 - (state.discount || 0) / 100)) * ((state.discount || 0) / 100) : 0,
+        subtotal: state.items.reduce((sum, item) => sum + item.price + (item.setupFee || 0), 0),
+        total: calculateTotal(),
+        currency: state.currency || 'KSh',
+        status: 'pending' as const,
+        payment_status: 'pending' as const,
+      };
+
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      for (const item of state.items) {
+        await supabase.from('order_items').insert({
+          order_id: order.id,
+          plan_id: item.planId || null,
+          name: item.name,
+          type: item.type,
+          unit_price: item.price,
+          total_price: item.price,
+          billing_cycle: item.billingCycle,
+          domain: domainOption.domain || item.domain || null,
+          features: item.features || [],
+        });
+      }
+
+      // Process payment via IntaSend
+      if (paymentMethod === 'mpesa') {
+        const phoneNumber = mpesaPhone || profile?.phone || guestFormData?.phone || '';
+        if (!phoneNumber) {
+          toast({ title: "Phone number required for M-Pesa", variant: "destructive" });
+          setLoading(false);
+          return;
         }
 
-        // Send DirectAdmin provisioning email (simulated)
-        await sendDirectAdminEmail(order, guestFormData || {
-          email: user?.email || '',
-          firstName: user?.user_metadata?.first_name || '',
-          lastName: user?.user_metadata?.last_name || ''
+        const { data: paymentResult, error: paymentError } = await supabase.functions.invoke('process-payment', {
+          body: {
+            action: 'initiate_mpesa',
+            order_id: order.id,
+            amount: calculateTotal(),
+            phone_number: phoneNumber,
+            currency: 'KES',
+          }
         });
 
-        setShowOrderComplete(true);
-        clearCart();
+        if (paymentError) throw paymentError;
+
+        if (paymentResult?.success) {
+          toast({
+            title: "M-Pesa STK Push Sent",
+            description: "Check your phone and enter your M-Pesa PIN to complete payment.",
+          });
+
+          // Poll for payment status
+          setPaymentPolling(true);
+          const invoiceId = paymentResult.invoice_id;
+          let attempts = 0;
+          const maxAttempts = 30;
+
+          const pollInterval = setInterval(async () => {
+            attempts++;
+            try {
+              const { data: statusResult } = await supabase.functions.invoke('process-payment', {
+                body: {
+                  action: 'check_status',
+                  invoice_id: invoiceId,
+                  order_id: order.id,
+                }
+              });
+
+              if (statusResult?.status === 'COMPLETE') {
+                clearInterval(pollInterval);
+                setPaymentPolling(false);
+                setShowOrderComplete(true);
+                clearCart();
+              } else if (attempts >= maxAttempts) {
+                clearInterval(pollInterval);
+                setPaymentPolling(false);
+                toast({
+                  title: "Payment Timeout",
+                  description: "Payment verification timed out. Check your M-Pesa and contact support if charged.",
+                  variant: "destructive",
+                });
+              }
+            } catch (err) {
+              console.error('Status check error:', err);
+            }
+          }, 5000);
+        }
+      } else if (paymentMethod === 'card') {
+        const { data: paymentResult, error: paymentError } = await supabase.functions.invoke('process-payment', {
+          body: {
+            action: 'initiate_card',
+            order_id: order.id,
+            amount: calculateTotal(),
+            currency: 'KES',
+            redirect_url: `${window.location.origin}/order-confirmation?order_id=${order.id}`,
+          }
+        });
+
+        if (paymentError) throw paymentError;
+
+        if (paymentResult?.checkout_url) {
+          window.location.href = paymentResult.checkout_url;
+          return;
+        }
       } else {
-        throw new Error('Payment processing failed');
+        toast({
+          title: "Payment Method",
+          description: "This payment method is not yet available. Please use M-Pesa or Card.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error placing order:', error);
       toast({
         title: "Error",
-        description: "Failed to place order. Please try again.",
+        description: error.message || "Failed to place order. Please try again.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const sendDirectAdminEmail = async (order: any, customerData: any) => {
-    try {
-      // Create DirectAdmin account and send credentials
-      const credentials = await directAdminService.createAccount({
-        orderId: order.id,
-        items: state.items,
-        domainOption
-      }, {
-        ...customerData,
-        userId: user?.id
-      });
-
-      // Send invoice email
-      await directAdminService.sendInvoiceEmail({
-        orderNumber: order.order_number,
-        total: order.total,
-        currency: order.currency,
-        items: order.items
-      }, {
-        ...customerData,
-        userId: user?.id
-      });
-
-      console.log('DirectAdmin account created and emails queued:', {
-        username: credentials.username,
-        domain: domainOption?.domain || `${credentials.username}.abancool.com`
-      });
-      
-    } catch (error) {
-      console.error('Error setting up DirectAdmin account:', error);
-      // Don't throw error here as the order was successful
-      toast({
-        title: "Account Setup",
-        description: "Order completed successfully. Account setup in progress. You'll receive credentials via email shortly.",
-      });
     }
   };
 
