@@ -97,18 +97,19 @@ const AdminPanel = () => {
 
   const loadStats = async () => {
     try {
-      // Load various statistics
-      const [usersResult, servicesResult, ordersResult, emailsResult] = await Promise.all([
+      const [usersResult, servicesResult, ordersResult, emailsResult, ticketsResult] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact' }),
         supabase.from('services').select('id, status', { count: 'exact' }),
         supabase.from('orders').select('id, status, total', { count: 'exact' }),
-        supabase.from('email_queue').select('id, status', { count: 'exact' })
+        supabase.from('email_queue').select('id, status', { count: 'exact' }),
+        supabase.from('support_tickets').select('id, status', { count: 'exact' })
       ]);
 
       const totalRevenue = ordersResult.data?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
       const activeServices = servicesResult.data?.filter(s => s.status === 'active').length || 0;
       const pendingOrders = ordersResult.data?.filter(o => o.status === 'pending').length || 0;
       const pendingEmails = emailsResult.data?.filter(e => e.status === 'pending').length || 0;
+      const openTickets = ticketsResult.data?.filter(t => t.status === 'open' || t.status === 'in_progress').length || 0;
 
       setStats({
         totalUsers: usersResult.count || 0,
@@ -118,7 +119,7 @@ const AdminPanel = () => {
         totalRevenue,
         activeServices,
         pendingEmails,
-        supportTickets: 0 // Will be loaded from support_tickets table
+        supportTickets: openTickets
       });
     } catch (error) {
       console.error('Error loading stats:', error);
