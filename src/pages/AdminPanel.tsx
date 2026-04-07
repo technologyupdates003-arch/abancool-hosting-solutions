@@ -42,6 +42,14 @@ interface AdminStats {
   supportTickets: number;
 }
 
+interface RecentActivity {
+  id: string;
+  type: string;
+  message: string;
+  time: string;
+  color: string;
+}
+
 const AdminPanel = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,11 +65,13 @@ const AdminPanel = () => {
   });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeWindow, setActiveWindow] = useState("dashboard");
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAdminAccess();
     loadStats();
+    loadRecentActivity();
     
     // Update time every second
     const timer = setInterval(() => {
