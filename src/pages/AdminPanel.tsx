@@ -433,20 +433,24 @@ const AdminPanel = () => {
                 </div>
               )}
 
-              {/* Other module content will be rendered here based on activeWindow */}
               {activeWindow === "users" && <UserManagementModule />}
               {activeWindow === "services" && <ServiceManagementModule />}
               {activeWindow === "orders" && <OrderManagementModule />}
-              
-              {activeWindow !== "dashboard" && activeWindow !== "users" && activeWindow !== "services" && activeWindow !== "orders" && (
+              {activeWindow === "emails" && <EmailManagementModule />}
+              {activeWindow === "billing" && <BillingManagementModule />}
+              {activeWindow === "support" && <SupportManagementModule />}
+              {activeWindow === "servers" && <ServerManagementModule />}
+              {activeWindow === "domains" && <DomainManagementModule />}
+              {activeWindow === "reports" && <ReportsModule />}
+              {activeWindow === "automation" && <AutomationModule />}
+
+              {(activeWindow === "settings" || activeWindow === "files") && (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🚧</div>
+                  <div className="text-6xl mb-4">⚙️</div>
                   <h2 className="text-xl font-semibold text-gray-700 mb-2">
                     {adminModules.find(m => m.id === activeWindow)?.title}
                   </h2>
-                  <p className="text-gray-600">
-                    This module is under construction. Full functionality coming soon.
-                  </p>
+                  <p className="text-gray-600">Coming soon</p>
                 </div>
               )}
             </div>
