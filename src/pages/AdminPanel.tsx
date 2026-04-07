@@ -406,28 +406,21 @@ const AdminPanel = () => {
                       <CardTitle className="text-lg">Recent System Activity</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-gray-600">New user registration: user@example.com</span>
-                          <span className="text-xs text-gray-400 ml-auto">2 minutes ago</span>
+                      {recentActivity.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {recentActivity.map((activity) => (
+                            <div key={activity.id} className="flex items-center gap-3 text-sm">
+                              <div className={`w-2 h-2 ${activity.color} rounded-full`}></div>
+                              <span className="text-gray-600 flex-1">{activity.message}</span>
+                              <span className="text-xs text-gray-400">
+                                {activity.time ? new Date(activity.time).toLocaleString() : ''}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-gray-600">Order completed: #ORD001234</span>
-                          <span className="text-xs text-gray-400 ml-auto">5 minutes ago</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                          <span className="text-gray-600">DirectAdmin account created: user123</span>
-                          <span className="text-xs text-gray-400 ml-auto">8 minutes ago</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="text-gray-600">Email sent: Welcome hosting credentials</span>
-                          <span className="text-xs text-gray-400 ml-auto">12 minutes ago</span>
-                        </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
