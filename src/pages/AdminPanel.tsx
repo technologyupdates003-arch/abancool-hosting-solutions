@@ -9,6 +9,13 @@ import { Input } from "@/components/ui/input";
 import { UserManagementModule } from "@/components/admin/UserManagementModule";
 import { ServiceManagementModule } from "@/components/admin/ServiceManagementModule";
 import { OrderManagementModule } from "@/components/admin/OrderManagementModule";
+import { EmailManagementModule } from "@/components/admin/EmailManagementModule";
+import { BillingManagementModule } from "@/components/admin/BillingManagementModule";
+import { SupportManagementModule } from "@/components/admin/SupportManagementModule";
+import { ServerManagementModule } from "@/components/admin/ServerManagementModule";
+import { DomainManagementModule } from "@/components/admin/DomainManagementModule";
+import { ReportsModule } from "@/components/admin/ReportsModule";
+import { AutomationModule } from "@/components/admin/AutomationModule";
 import { 
   Users, 
   Server, 
@@ -426,20 +433,24 @@ const AdminPanel = () => {
                 </div>
               )}
 
-              {/* Other module content will be rendered here based on activeWindow */}
               {activeWindow === "users" && <UserManagementModule />}
               {activeWindow === "services" && <ServiceManagementModule />}
               {activeWindow === "orders" && <OrderManagementModule />}
-              
-              {activeWindow !== "dashboard" && activeWindow !== "users" && activeWindow !== "services" && activeWindow !== "orders" && (
+              {activeWindow === "emails" && <EmailManagementModule />}
+              {activeWindow === "billing" && <BillingManagementModule />}
+              {activeWindow === "support" && <SupportManagementModule />}
+              {activeWindow === "servers" && <ServerManagementModule />}
+              {activeWindow === "domains" && <DomainManagementModule />}
+              {activeWindow === "reports" && <ReportsModule />}
+              {activeWindow === "automation" && <AutomationModule />}
+
+              {(activeWindow === "settings" || activeWindow === "files") && (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🚧</div>
+                  <div className="text-6xl mb-4">⚙️</div>
                   <h2 className="text-xl font-semibold text-gray-700 mb-2">
                     {adminModules.find(m => m.id === activeWindow)?.title}
                   </h2>
-                  <p className="text-gray-600">
-                    This module is under construction. Full functionality coming soon.
-                  </p>
+                  <p className="text-gray-600">Coming soon</p>
                 </div>
               )}
             </div>
