@@ -50,8 +50,8 @@ export function SupportManagementModule() {
       setReplyText("");
       openTicket(selectedTicket);
       // Update ticket status to in_progress if open
-      if (selectedTicket.status === 'open') {
-        await supabase.from('support_tickets').update({ status: 'in_progress' }).eq('id', selectedTicket.id);
+if (selectedTicket.status === 'open') {
+        await supabase.from('support_tickets').update({ status: 'in_progress' as const }).eq('id', selectedTicket.id);
         loadTickets();
       }
     }
