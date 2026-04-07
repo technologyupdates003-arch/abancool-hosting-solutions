@@ -9,6 +9,13 @@ import { Input } from "@/components/ui/input";
 import { UserManagementModule } from "@/components/admin/UserManagementModule";
 import { ServiceManagementModule } from "@/components/admin/ServiceManagementModule";
 import { OrderManagementModule } from "@/components/admin/OrderManagementModule";
+import { EmailManagementModule } from "@/components/admin/EmailManagementModule";
+import { BillingManagementModule } from "@/components/admin/BillingManagementModule";
+import { SupportManagementModule } from "@/components/admin/SupportManagementModule";
+import { ServerManagementModule } from "@/components/admin/ServerManagementModule";
+import { DomainManagementModule } from "@/components/admin/DomainManagementModule";
+import { ReportsModule } from "@/components/admin/ReportsModule";
+import { AutomationModule } from "@/components/admin/AutomationModule";
 import { 
   Users, 
   Server, 
