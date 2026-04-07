@@ -42,6 +42,14 @@ interface AdminStats {
   supportTickets: number;
 }
 
+interface RecentActivity {
+  id: string;
+  type: string;
+  message: string;
+  time: string;
+  color: string;
+}
+
 const AdminPanel = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,11 +65,13 @@ const AdminPanel = () => {
   });
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeWindow, setActiveWindow] = useState("dashboard");
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAdminAccess();
     loadStats();
+    loadRecentActivity();
     
     // Update time every second
     const timer = setInterval(() => {
@@ -97,18 +107,19 @@ const AdminPanel = () => {
 
   const loadStats = async () => {
     try {
-      // Load various statistics
-      const [usersResult, servicesResult, ordersResult, emailsResult] = await Promise.all([
+      const [usersResult, servicesResult, ordersResult, emailsResult, ticketsResult] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact' }),
         supabase.from('services').select('id, status', { count: 'exact' }),
         supabase.from('orders').select('id, status, total', { count: 'exact' }),
-        supabase.from('email_queue').select('id, status', { count: 'exact' })
+        supabase.from('email_queue').select('id, status', { count: 'exact' }),
+        supabase.from('support_tickets').select('id, status', { count: 'exact' })
       ]);
 
       const totalRevenue = ordersResult.data?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
       const activeServices = servicesResult.data?.filter(s => s.status === 'active').length || 0;
       const pendingOrders = ordersResult.data?.filter(o => o.status === 'pending').length || 0;
       const pendingEmails = emailsResult.data?.filter(e => e.status === 'pending').length || 0;
+      const openTickets = ticketsResult.data?.filter(t => t.status === 'open' || t.status === 'in_progress').length || 0;
 
       setStats({
         totalUsers: usersResult.count || 0,
@@ -118,15 +129,31 @@ const AdminPanel = () => {
         totalRevenue,
         activeServices,
         pendingEmails,
-        supportTickets: 0 // Will be loaded from support_tickets table
+        supportTickets: openTickets
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
   };
 
+  const loadRecentActivity = async () => {
+    try {
+      const [ordersRes, servicesRes] = await Promise.all([
+        supabase.from('orders').select('id, order_number, status, created_at').order('created_at', { ascending: false }).limit(5),
+        supabase.from('services').select('id, domain, status, created_at').order('created_at', { ascending: false }).limit(5),
+      ]);
+      const activities: RecentActivity[] = [];
+      ordersRes.data?.forEach(o => activities.push({ id: o.id, type: 'order', message: `Order #${o.order_number || o.id.slice(0, 8)} - ${o.status}`, time: o.created_at || '', color: o.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500' }));
+      servicesRes.data?.forEach(s => activities.push({ id: s.id, type: 'service', message: `Service ${s.domain || 'new'} - ${s.status}`, time: s.created_at || '', color: s.status === 'active' ? 'bg-green-500' : 'bg-purple-500' }));
+      activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      setRecentActivity(activities.slice(0, 8));
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+    }
+  };
+
   const adminModules = [
-    { 
+    {
       id: "users", 
       title: "User Management", 
       icon: Users, 
@@ -379,28 +406,21 @@ const AdminPanel = () => {
                       <CardTitle className="text-lg">Recent System Activity</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-gray-600">New user registration: user@example.com</span>
-                          <span className="text-xs text-gray-400 ml-auto">2 minutes ago</span>
+                      {recentActivity.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {recentActivity.map((activity) => (
+                            <div key={activity.id} className="flex items-center gap-3 text-sm">
+                              <div className={`w-2 h-2 ${activity.color} rounded-full`}></div>
+                              <span className="text-gray-600 flex-1">{activity.message}</span>
+                              <span className="text-xs text-gray-400">
+                                {activity.time ? new Date(activity.time).toLocaleString() : ''}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span className="text-gray-600">Order completed: #ORD001234</span>
-                          <span className="text-xs text-gray-400 ml-auto">5 minutes ago</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                          <span className="text-gray-600">DirectAdmin account created: user123</span>
-                          <span className="text-xs text-gray-400 ml-auto">8 minutes ago</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="text-gray-600">Email sent: Welcome hosting credentials</span>
-                          <span className="text-xs text-gray-400 ml-auto">12 minutes ago</span>
-                        </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
