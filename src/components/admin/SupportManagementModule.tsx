@@ -57,7 +57,7 @@ if (selectedTicket.status === 'open') {
     }
   };
 
-  const updateTicketStatus = async (id: string, status: string) => {
+  const updateTicketStatus = async (id: string, status: "open" | "in_progress" | "resolved" | "closed") => {
     const { error } = await supabase.from('support_tickets').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
     if (error) toast.error("Failed to update");
     else { toast.success(`Ticket ${status}`); loadTickets(); }
