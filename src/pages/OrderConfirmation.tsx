@@ -1,33 +1,70 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { orderService, Order } from "@/services/orderService";
+import { useSearchParams, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Download, Mail, ArrowRight } from "lucide-react";
+import { CheckCircle, Download, Mail, ArrowRight, Loader2 } from "lucide-react";
 
 const OrderConfirmation = () => {
-  const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('order_id');
+  const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (orderId) {
       loadOrder();
+      // Verify payment and trigger provisioning
+      verifyAndProvision();
+    } else {
+      setLoading(false);
     }
   }, [orderId]);
 
   const loadOrder = async () => {
     try {
-      const orderData = await orderService.getOrderById(orderId!);
-      setOrder(orderData);
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId!)
+        .single();
+      
+      if (!error) setOrder(data);
     } catch (error) {
       console.error('Error loading order:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyAndProvision = async () => {
+    try {
+      // Check if this is a card payment callback - verify with IntaSend
+      const { data: txn } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('order_id', orderId!)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (txn && txn.status === 'pending' && txn.transaction_id) {
+        await supabase.functions.invoke('process-payment', {
+          body: {
+            action: 'check_status',
+            invoice_id: txn.transaction_id,
+            order_id: orderId,
+          }
+        });
+        // Reload order to get updated status
+        setTimeout(loadOrder, 2000);
+      }
+    } catch (error) {
+      console.error('Error verifying payment:', error);
     }
   };
 
