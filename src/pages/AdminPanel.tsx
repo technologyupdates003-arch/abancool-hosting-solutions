@@ -136,8 +136,24 @@ const AdminPanel = () => {
     }
   };
 
+  const loadRecentActivity = async () => {
+    try {
+      const [ordersRes, servicesRes] = await Promise.all([
+        supabase.from('orders').select('id, order_number, status, created_at').order('created_at', { ascending: false }).limit(5),
+        supabase.from('services').select('id, domain, status, created_at').order('created_at', { ascending: false }).limit(5),
+      ]);
+      const activities: RecentActivity[] = [];
+      ordersRes.data?.forEach(o => activities.push({ id: o.id, type: 'order', message: `Order #${o.order_number || o.id.slice(0, 8)} - ${o.status}`, time: o.created_at || '', color: o.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500' }));
+      servicesRes.data?.forEach(s => activities.push({ id: s.id, type: 'service', message: `Service ${s.domain || 'new'} - ${s.status}`, time: s.created_at || '', color: s.status === 'active' ? 'bg-green-500' : 'bg-purple-500' }));
+      activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+      setRecentActivity(activities.slice(0, 8));
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+    }
+  };
+
   const adminModules = [
-    { 
+    {
       id: "users", 
       title: "User Management", 
       icon: Users, 
