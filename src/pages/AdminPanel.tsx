@@ -255,12 +255,12 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600 relative overflow-hidden">
+    <div className="relative h-screen overflow-hidden bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600">
       {/* Windows 7 Style Background */}
-      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E\")" }} />
+      <div className="pointer-events-none absolute inset-0 opacity-30" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='20' height='20' patternUnits='userSpaceOnUse'%3E%3Cpath d='M 20 0 L 0 0 0 20' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grid)'/%3E%3C/svg%3E\")" }} />
 
       {/* Main Window */}
-      <div className="container mx-auto p-4 h-screen flex flex-col">
+      <div className="container relative z-10 mx-auto flex h-[calc(100vh-2.5rem)] min-h-0 flex-col p-4">
         {/* Window Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-lg border border-blue-800 shadow-lg">
           <div className="flex items-center justify-between px-4 py-2">
@@ -285,7 +285,7 @@ const AdminPanel = () => {
         </div>
 
         {/* Window Content */}
-        <div className="flex-1 bg-gradient-to-b from-gray-50 to-gray-100 border-x border-b border-blue-800 rounded-b-lg shadow-lg overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-lg border-x border-b border-blue-800 bg-gradient-to-b from-gray-50 to-gray-100 shadow-lg">
           {/* Toolbar */}
           <div className="bg-gradient-to-b from-gray-200 to-gray-300 border-b border-gray-400 px-4 py-2">
             <div className="flex items-center gap-4">
@@ -313,9 +313,9 @@ const AdminPanel = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex h-full">
+          <div className="flex min-h-0 flex-1">
             {/* Sidebar */}
-            <div className="w-64 bg-gradient-to-b from-gray-100 to-gray-200 border-r border-gray-400 p-4">
+            <div className="w-64 shrink-0 overflow-y-auto border-r border-gray-400 bg-gradient-to-b from-gray-100 to-gray-200 p-4">
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
                   Admin Functions
@@ -369,7 +369,7 @@ const AdminPanel = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 p-6 overflow-auto">
+            <div className="flex-1 overflow-y-auto p-6 pb-16">
               {activeWindow === "dashboard" && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -459,7 +459,7 @@ const AdminPanel = () => {
       </div>
 
       {/* Windows 7 Style Taskbar */}
-      <div className="fixed bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-gray-800 to-gray-700 border-t border-gray-600 shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 z-20 h-10 border-t border-gray-600 bg-gradient-to-t from-gray-800 to-gray-700 shadow-lg">
         <div className="flex items-center justify-between h-full px-4">
           <div className="flex items-center gap-2">
             {/* Start Button */}
