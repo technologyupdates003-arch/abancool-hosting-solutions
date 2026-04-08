@@ -18,30 +18,33 @@ const HeroSection = () => {
             Get world-class hosting and support from Africa's most trusted technology provider. Fast, reliable, and always here for you.
           </p>
 
-          <div className="bg-hero-foreground/10 backdrop-blur-sm rounded-xl p-4 max-w-lg">
-            <textarea
-              placeholder="Tell us about your business and let our site builder do its magic..."
-              className="w-full bg-transparent text-hero-foreground/80 placeholder:text-hero-foreground/40 outline-none resize-none text-sm h-16"
-            />
-            <div className="flex justify-end">
-              <button className="bg-accent text-accent-foreground px-8 py-2.5 rounded-full font-semibold text-sm hover:opacity-90 transition-opacity">
-                Build
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-4">
+            <a
+              href="/store"
+              className="bg-primary text-primary-foreground px-8 py-3 rounded-full font-semibold text-sm hover:opacity-90 transition-opacity inline-block"
+            >
+              View Hosting Plans
+            </a>
+            <a
+              href="/store"
+              className="border border-hero-foreground/30 text-hero-foreground px-8 py-3 rounded-full font-semibold text-sm hover:border-primary hover:text-primary transition-colors inline-block"
+            >
+              Get Started
+            </a>
           </div>
 
-          <div className="space-y-2">
-            <p className="text-hero-foreground/50 text-sm">Need a spark? Try these</p>
-            <div className="flex flex-wrap gap-2">
-              {["Restaurant", "Consulting", "Design Studio", "Fitness Coach"].map((tag) => (
-                <button
-                  key={tag}
-                  className="px-4 py-2 rounded-full border border-hero-foreground/20 text-sm text-hero-foreground/70 hover:border-primary hover:text-primary transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-6 pt-4">
+            {[
+              { label: "99.9% Uptime", icon: "⚡" },
+              { label: "24/7 Support", icon: "🛡️" },
+              { label: "Free SSL", icon: "🔒" },
+              { label: "KSh Pricing", icon: "💰" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-2 text-sm text-hero-foreground/70">
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
 
