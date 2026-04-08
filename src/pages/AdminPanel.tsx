@@ -16,6 +16,7 @@ import { ServerManagementModule } from "@/components/admin/ServerManagementModul
 import { DomainManagementModule } from "@/components/admin/DomainManagementModule";
 import { ReportsModule } from "@/components/admin/ReportsModule";
 import { AutomationModule } from "@/components/admin/AutomationModule";
+import { PlanManagementModule } from "@/components/admin/PlanManagementModule";
 import { 
   Users, 
   Server, 
@@ -160,90 +161,18 @@ const AdminPanel = () => {
   };
 
   const adminModules = [
-    {
-      id: "users", 
-      title: "User Management", 
-      icon: Users, 
-      description: "Manage customer accounts",
-      count: stats.totalUsers
-    },
-    { 
-      id: "services", 
-      title: "Service Management", 
-      icon: Server, 
-      description: "Hosting services & DirectAdmin",
-      count: stats.totalServices
-    },
-    { 
-      id: "orders", 
-      title: "Order Management", 
-      icon: ShoppingCart, 
-      description: "Process orders & payments",
-      count: stats.pendingOrders
-    },
-    { 
-      id: "emails", 
-      title: "Email System", 
-      icon: Mail, 
-      description: "Email queue & templates",
-      count: stats.pendingEmails
-    },
-    { 
-      id: "billing", 
-      title: "Billing & Invoices", 
-      icon: CreditCard, 
-      description: "Financial management",
-      count: 0
-    },
-    { 
-      id: "support", 
-      title: "Support Center", 
-      icon: Shield, 
-      description: "Tickets & customer support",
-      count: stats.supportTickets
-    },
-    { 
-      id: "servers", 
-      title: "Server Management", 
-      icon: Database, 
-      description: "DirectAdmin servers",
-      count: 1
-    },
-    { 
-      id: "domains", 
-      title: "Domain Management", 
-      icon: Globe, 
-      description: "Domain registrations",
-      count: 0
-    },
-    { 
-      id: "reports", 
-      title: "Reports & Analytics", 
-      icon: BarChart3, 
-      description: "Business intelligence",
-      count: 0
-    },
-    { 
-      id: "settings", 
-      title: "System Settings", 
-      icon: Settings, 
-      description: "Configuration & preferences",
-      count: 0
-    },
-    { 
-      id: "automation", 
-      title: "Automation Rules", 
-      icon: Activity, 
-      description: "Workflow automation",
-      count: 0
-    },
-    { 
-      id: "files", 
-      title: "File Manager", 
-      icon: FileText, 
-      description: "System files & backups",
-      count: 0
-    }
+    { id: "users", title: "User Management", icon: Users, description: "Manage customer accounts", count: stats.totalUsers },
+    { id: "plans", title: "Plans & Products", icon: HardDrive, description: "Hosting plans & pricing", count: 0 },
+    { id: "services", title: "Service Management", icon: Server, description: "Hosting services & DirectAdmin", count: stats.totalServices },
+    { id: "orders", title: "Order Management", icon: ShoppingCart, description: "Process orders & payments", count: stats.pendingOrders },
+    { id: "emails", title: "Email System", icon: Mail, description: "Email queue & templates", count: stats.pendingEmails },
+    { id: "billing", title: "Billing & Invoices", icon: CreditCard, description: "Financial management", count: 0 },
+    { id: "support", title: "Support Center", icon: Shield, description: "Tickets & customer support", count: stats.supportTickets },
+    { id: "servers", title: "Server Management", icon: Database, description: "DirectAdmin servers", count: 0 },
+    { id: "domains", title: "Domain Management", icon: Globe, description: "Domain registrations", count: 0 },
+    { id: "reports", title: "Reports & Analytics", icon: BarChart3, description: "Business intelligence", count: 0 },
+    { id: "automation", title: "Automation Rules", icon: Activity, description: "Workflow automation", count: 0 },
+    { id: "settings", title: "System Settings", icon: Settings, description: "Configuration & preferences", count: 0 },
   ];
 
   if (loading) {
@@ -440,16 +369,15 @@ const AdminPanel = () => {
               {activeWindow === "billing" && <BillingManagementModule />}
               {activeWindow === "support" && <SupportManagementModule />}
               {activeWindow === "servers" && <ServerManagementModule />}
+              {activeWindow === "plans" && <PlanManagementModule />}
               {activeWindow === "domains" && <DomainManagementModule />}
               {activeWindow === "reports" && <ReportsModule />}
               {activeWindow === "automation" && <AutomationModule />}
 
-              {(activeWindow === "settings" || activeWindow === "files") && (
+              {activeWindow === "settings" && (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">⚙️</div>
-                  <h2 className="text-xl font-semibold text-gray-700 mb-2">
-                    {adminModules.find(m => m.id === activeWindow)?.title}
-                  </h2>
+                  <h2 className="text-xl font-semibold text-gray-700 mb-2">System Settings</h2>
                   <p className="text-gray-600">Coming soon</p>
                 </div>
               )}
