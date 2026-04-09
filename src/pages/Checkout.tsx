@@ -280,8 +280,11 @@ const Checkout = () => {
         });
 
         if (paymentError) throw paymentError;
+        if (paymentResult && !paymentResult.ok) {
+          throw new Error(paymentResult.error || 'Payment initiation failed');
+        }
 
-        if (paymentResult?.success) {
+        if (paymentResult?.ok) {
           toast({
             title: "M-Pesa STK Push Sent",
             description: "Check your phone and enter your M-Pesa PIN to complete payment.",
@@ -335,6 +338,9 @@ const Checkout = () => {
         });
 
         if (paymentError) throw paymentError;
+        if (paymentResult && !paymentResult.ok) {
+          throw new Error(paymentResult.error || 'Card payment initiation failed');
+        }
 
         if (paymentResult?.checkout_url) {
           window.location.href = paymentResult.checkout_url;
