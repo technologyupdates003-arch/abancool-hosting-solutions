@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { RefreshCw, Server, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RefreshCw, ExternalLink, Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export function ServerManagementModule() {
@@ -17,6 +18,9 @@ export function ServerManagementModule() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addServerOpen, setAddServerOpen] = useState(false);
+  const [selectedServers, setSelectedServers] = useState<Set<string>>(new Set());
+  const [ns1, setNs1] = useState("ns1.abancool.com");
+  const [ns2, setNs2] = useState("ns2.abancool.com");
   const [newServer, setNewServer] = useState({
     name: "", hostname: "", ip_address: "", port: 2222,
     api_username: "admin", api_password: "", ssl_enabled: true,
@@ -44,16 +48,10 @@ export function ServerManagementModule() {
       return;
     }
     const { error } = await supabase.from('directadmin_servers').insert({
-      name: newServer.name,
-      hostname: newServer.hostname,
-      ip_address: newServer.ip_address,
-      port: newServer.port,
-      api_username: newServer.api_username,
-      api_password: newServer.api_password,
-      ssl_enabled: newServer.ssl_enabled,
-      max_accounts: newServer.max_accounts,
-      location: newServer.location,
-      status: 'active'
+      name: newServer.name, hostname: newServer.hostname, ip_address: newServer.ip_address,
+      port: newServer.port, api_username: newServer.api_username, api_password: newServer.api_password,
+      ssl_enabled: newServer.ssl_enabled, max_accounts: newServer.max_accounts,
+      location: newServer.location, status: 'active'
     } as any);
     if (error) {
       toast.error("Failed to add server: " + error.message);
@@ -71,6 +69,37 @@ export function ServerManagementModule() {
     if (error) toast.error("Failed to delete server");
     else { toast.success("Server deleted"); loadData(); }
   };
+
+  const deleteSelected = async () => {
+    if (selectedServers.size === 0) return;
+    if (!confirm(`Delete ${selectedServers.size} selected server(s)?`)) return;
+    for (const id of selectedServers) {
+      await supabase.from('directadmin_servers').delete().eq('id', id);
+    }
+    setSelectedServers(new Set());
+    toast.success("Selected servers deleted");
+    loadData();
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedServers);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedServers(next);
+  };
+
+  const saveNameservers = () => {
+    // Store in localStorage for now; these are used during provisioning
+    localStorage.setItem('ns1', ns1);
+    localStorage.setItem('ns2', ns2);
+    toast.success("Nameservers saved");
+  };
+
+  useEffect(() => {
+    const saved1 = localStorage.getItem('ns1');
+    const saved2 = localStorage.getItem('ns2');
+    if (saved1) setNs1(saved1);
+    if (saved2) setNs2(saved2);
+  }, []);
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>;
 
@@ -120,20 +149,49 @@ export function ServerManagementModule() {
         <Card><CardContent className="p-4 text-center"><div className="text-2xl font-bold">{accounts.length}</div><div className="text-xs text-gray-500">Accounts</div></CardContent></Card>
       </div>
 
+      {/* Servers Table with selection */}
       <Card>
-        <CardHeader><CardTitle>Servers</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Servers</span>
+            {selectedServers.size > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-normal text-gray-500">With selected ({selectedServers.size} / {servers.length}):</span>
+                <Button variant="outline" size="sm" onClick={deleteSelected}><Trash2 className="w-3 h-3 mr-1" />Delete</Button>
+              </div>
+            )}
+          </CardTitle>
+        </CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Hostname</TableHead><TableHead>IP</TableHead><TableHead>Accounts</TableHead><TableHead>Location</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={selectedServers.size === servers.length && servers.length > 0}
+                    onCheckedChange={(v) => {
+                      if (v) setSelectedServers(new Set(servers.map(s => s.id)));
+                      else setSelectedServers(new Set());
+                    }}
+                  />
+                </TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>User(s)</TableHead>
+                <TableHead>Name Server</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {servers.map(s => (
                 <TableRow key={s.id}>
-                  <TableCell className="font-medium">{s.name}</TableCell>
-                  <TableCell>{s.hostname}</TableCell>
-                  <TableCell className="font-mono text-xs">{s.ip_address}</TableCell>
-                  <TableCell>{s.current_accounts}/{s.max_accounts}</TableCell>
-                  <TableCell>{s.location || '-'}</TableCell>
+                  <TableCell>
+                    <Checkbox checked={selectedServers.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} />
+                  </TableCell>
+                  <TableCell className="font-mono text-sm">{s.ip_address}</TableCell>
                   <TableCell><Badge variant={s.status === 'active' ? 'default' : 'secondary'}>{s.status}</Badge></TableCell>
+                  <TableCell>{s.current_accounts}</TableCell>
+                  <TableCell className="text-sm">{s.hostname}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button size="sm" variant="outline" onClick={() => window.open(`https://${s.hostname}:${s.port || 2222}`, '_blank')}>
@@ -146,12 +204,33 @@ export function ServerManagementModule() {
                   </TableCell>
                 </TableRow>
               ))}
-              {servers.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-gray-500">No servers configured. Click "Add Server" to get started.</TableCell></TableRow>}
+              {servers.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-gray-500">No servers configured. Click "Add Server" to get started.</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
+      {/* Nameserver Configuration */}
+      <Card>
+        <CardHeader><CardTitle>Set the Name servers that will be assigned to new users</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Name Server 1</Label>
+              <Input value={ns1} onChange={e => setNs1(e.target.value)} placeholder="ns1.abancool.com" />
+            </div>
+            <div>
+              <Label>Name Server 2</Label>
+              <Input value={ns2} onChange={e => setNs2(e.target.value)} placeholder="ns2.abancool.com" />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={saveNameservers}><Save className="w-4 h-4 mr-2" />Save</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Accounts */}
       <Card>
         <CardHeader><CardTitle>Recent Accounts</CardTitle></CardHeader>
         <CardContent>

@@ -8,9 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit, Trash2, RefreshCw, Package } from "lucide-react";
+import { Plus, Edit, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 interface HostingPlan {
@@ -29,8 +29,15 @@ interface HostingPlan {
   created_at: string;
 }
 
+const CATEGORIES = [
+  "Shared Hosting", "Web Hosting", "WordPress Hosting", "LiteSpeed Hosting",
+  "Reseller Hosting", "Cloud Servers Linux", "Cloud Servers Windows",
+  "Professional Email", "SSL Certificates", "Site Builder", "VPS Hosting",
+  "Dedicated", "Security", "Email Hosting"
+];
+
 const emptyPlan = {
-  name: "", description: "", category: "shared", price: 0,
+  name: "", description: "", category: "Shared Hosting", price: 0,
   monthly_price: 0, quarterly_price: 0, annual_price: 0, biennial_price: 0,
   currency: "KSh", features: [] as string[], is_active: true
 };
@@ -115,13 +122,14 @@ export function PlanManagementModule() {
   };
 
   const removeFeature = (idx: number) => {
-    setForm({ ...form, features: form.features.filter((_, i) => i !== idx) });
+    setForm({ ...form, features: form.features.filter((_: string, i: number) => i !== idx) });
   };
 
-  const categoryLabel: Record<string, string> = {
-    shared: "Shared Hosting", vps: "VPS Hosting", reseller: "Reseller Hosting",
-    security: "Security", email: "Email Hosting", dedicated: "Dedicated"
-  };
+  // Build dynamic category counts from actual data
+  const categoryCounts = plans.reduce<Record<string, number>>((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1;
+    return acc;
+  }, {});
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>;
 
@@ -139,17 +147,14 @@ export function PlanManagementModule() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {Object.entries(categoryLabel).map(([key, label]) => {
-          const count = plans.filter(p => p.category === key).length;
-          return (
-            <Card key={key}>
-              <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{count}</div>
-                <div className="text-xs text-gray-500">{label}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {Object.entries(categoryCounts).map(([cat, count]) => (
+          <Card key={cat}>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold">{count}</div>
+              <div className="text-xs text-gray-500">{cat}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>
@@ -173,7 +178,7 @@ export function PlanManagementModule() {
                   <TableCell>
                     <div><div className="font-medium">{plan.name}</div><div className="text-xs text-gray-500 truncate max-w-[200px]">{plan.description}</div></div>
                   </TableCell>
-                  <TableCell><Badge variant="outline">{categoryLabel[plan.category] || plan.category}</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{plan.category}</Badge></TableCell>
                   <TableCell>{plan.currency} {plan.monthly_price || plan.price}</TableCell>
                   <TableCell>{plan.quarterly_price ? `${plan.currency} ${plan.quarterly_price}` : '-'}</TableCell>
                   <TableCell>{plan.annual_price ? `${plan.currency} ${plan.annual_price}` : '-'}</TableCell>
@@ -205,12 +210,7 @@ export function PlanManagementModule() {
                 <Select value={form.category} onValueChange={v => setForm({...form, category: v})}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="shared">Shared Hosting</SelectItem>
-                    <SelectItem value="vps">VPS Hosting</SelectItem>
-                    <SelectItem value="reseller">Reseller Hosting</SelectItem>
-                    <SelectItem value="security">Security</SelectItem>
-                    <SelectItem value="email">Email Hosting</SelectItem>
-                    <SelectItem value="dedicated">Dedicated</SelectItem>
+                    {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -233,7 +233,7 @@ export function PlanManagementModule() {
                 <Button type="button" onClick={addFeature} size="sm">Add</Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
-                {form.features.map((f, i) => (
+                {form.features.map((f: string, i: number) => (
                   <Badge key={i} variant="secondary" className="cursor-pointer" onClick={() => removeFeature(i)}>
                     {f} ×
                   </Badge>
